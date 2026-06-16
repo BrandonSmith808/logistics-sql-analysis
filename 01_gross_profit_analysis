@@ -1,0 +1,32 @@
+-- What is the total revenue, operational costs, and gross profit of our company?
+
+SELECT
+        -- Calculate total revenue and operational costs
+        (SELECT FORMAT(SUM(revenue), 'C', 'en-US') FROM dbo.loads) AS total_revenue, 
+        (SELECT FORMAT(SUM(total_cost),'C', 'en-US') FROM dbo.fuel_purchases) AS total_fuel_cost,
+        (SELECT FORMAT(SUM(total_cost), 'C', 'en-US') FROM dbo.maintenance_records) AS total_maintenance_cost,
+        (SELECT FORMAT(SUM(claim_amount), 'C', 'en-US') FROM dbo.safety_incidents) AS total_incident_cost,
+        
+        -- Calculate total gross profit across all operational cost categories
+        FORMAT((SELECT ROUND(SUM(revenue), 2) FROM dbo.loads) - 
+        ((SELECT ROUND(SUM(total_cost), 2) FROM dbo.fuel_purchases) + 
+        (SELECT ROUND(SUM(total_cost), 2) FROM dbo.maintenance_records) + 
+        (SELECT ROUND(SUM(claim_amount), 2) FROM dbo.safety_incidents)), 'C', 'en-US') AS total_profit
+
+/* FINDINGS:
+   Total Revenue:            $262,525,800.33
+   Total Fuel Cost:          $95,592,992.04
+   Total Maintenance Cost:   $5,730,573.28
+   Total Incident Cost:      $2,653,171.82
+   Gross Profit:             $158,549,063.19
+   Gross Profit Margin:      ~60.4%
+
+   Fuel is the dominant cost at ~36% of revenue -- expected cost but warrants efficiency analysis.
+
+   Maintenance exceeds incident costs suggesting reactive rather than proactive fleet management.
+
+   High fuel and maintenance costs may be influenced by fleet age and truck make. Further analysis in truck efficiency report.
+
+   Margin appears healthy but is incomplete without full cost picture (driver salaries, insurance, 
+   administrative costs, truck payments, etc.)
+*/

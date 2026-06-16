@@ -1,0 +1,36 @@
+-- Are our employees actually working to standard and working efficiently?
+WITH efficiency_avgs AS (
+SELECT 
+dmm.driver_id,
+CONCAT(dri.first_name, ' ', dri.last_name) AS full_name,
+SUM(dmm.trips_completed) AS total_trips_completed,
+ROUND(SUM(dmm.average_mpg * dmm.trips_completed) / SUM(dmm.trips_completed), 2) AS weighted_avg_mpg,
+ROUND(SUM(dmm.average_idle_hours * dmm.trips_completed) / SUM(dmm.trips_completed), 2) AS idle_hours_per_trip,
+ROUND(SUM(dmm.on_time_delivery_rate * dmm.trips_completed) / SUM(dmm.trips_completed), 2) AS weighted_avg_on_time
+FROM dbo.driver_monthly_metrics dmm
+JOIN dbo.drivers dri
+ON dmm.driver_id = dri.driver_id
+GROUP BY dmm.driver_id, CONCAT(dri.first_name, ' ', dri.last_name)
+)
+
+SELECT 
+ROUND(SUM(weighted_avg_on_time * total_trips_completed) / SUM(total_trips_completed), 2) AS fleet_avg_on_time,
+ROUND(SUM(weighted_avg_mpg * total_trips_completed) / SUM(total_trips_completed), 2) AS fleet_avg_mpg,
+ROUND(SUM(idle_hours_per_trip * total_trips_completed) / SUM(total_trips_completed), 2) AS fleet_avg_idle_hours
+FROM efficiency_avgs
+
+/* FINDINGS:
+Fleet Average MPG:                6.50
+Fleet Average Idle Hours:         7 hours
+Fleet Average On Time Delivery:   45%
+
+Data indicates that on average, drivers perform similarly other than a few outliers based on average on time delivery. 
+Outliers: Lowest Performer: Mary Wilson (37% on time), Highest Performer: Jessica Johnson (50% on time)
+
+45% fleet on time rate showcases need for further analysis to identify whether this is a 
+systemic or indiviudal efficiency issue. 
+
+Idle hours per trip requires deeper analysis to determine whether lengthened idle hours are caused by route conditions or individual driver behavior. 
+Recommended analysis includes: routes, traffic patterns, weather events, loading station wait times. 
+
+*/

@@ -1,0 +1,27 @@
+-- How efficient are our trucks running? 
+
+SELECT
+t.model_year,
+t.make,
+ROUND(SUM(tum.maintenance_cost) / SUM(tum.total_miles), 2) AS maintenance_cost_per_mile,
+ROUND(SUM(tum.downtime_hours) / SUM(tum.trips_completed), 2) AS downtime_hours_per_trip
+FROM dbo.truck_utilization_metrics tum
+JOIN dbo.trucks t
+ON t.truck_id = tum.truck_id
+GROUP BY t.model_year, t.make
+ORDER BY downtime_hours_per_trip DESC
+/*
+
+Maintenance costs below industry standard across fleet. 
+
+Volvo appears to have longer downtimes compared to other makes. However, 2019 Volvo has excellent performance.
+Deeper analysis of specific trucks needed to determine most efficient make and model year. 
+
+Model year doesn't predict maintenance costs or downtimes amongst trucks.
+For example, 2021 International has a maintenance cost of 0.06 which is over its 2015 model year at 0.04.
+
+Individual truck condition or acquisition mileage may be better for identifying depreciating trucks.
+
+Full cost analysis is limited due to missing acquisition and depreciation data. 
+
+*/
